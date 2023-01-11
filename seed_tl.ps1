@@ -388,7 +388,8 @@ do {
 
     #Sort List
     $serverSorted = ($serverList.getenumerator() | Sort-Object -Property Value -Descending)
-            
+
+    ### Pick a server to seed
     $serverToSeed = ""
     if($serverSorted -eq $null){
         Write-Host (timestamp) "There doesn't seem to be any servers in need of seeding!" -BackgroundColor White -ForegroundColor Black
@@ -401,35 +402,29 @@ do {
     }
     else {
         #Find all servers with the same Player Count
-        $serversWithSameNumberOfPlayers = @()
+        $serversWithSamePlayerCount = @()
         
-        Write-Host "Make a list of the servers"
         foreach( $item in $serverSorted) {
             if ($item.Value -eq $serverSorted[0].Value) {
-                $serversWithSameNumberOfPlayers += $item.Name
+                $serversWithSamePlayerCount += $item.Name
             }
             else {
                 break;
             }
         }
  
-        if ($serversWithSameNumberOfPlayers.count -eq 1) {
+        if ($serversWithSamePlayerCount.count -eq 1) {
             #If there is only one server with the max user count
             #we are done and can pick the top server
-            Write-Host "Only one with the same high playercount"
             $serverToSeed = $serverSorted[0].Name 
         }
         else {
             #If there are several servers with the same player count
             #Pick by priorty of servers from the web.
-            Write-Host "Multiple with the same high playercount"
             $found = $false
-            foreach($serverFromList in $serversFromWeb) {
-                foreach($serverFromSortedList in $serversWithSameNumberOfPlayers)
-                {
-                    Write-Host "$serverFromList compared to $serverFromSortedList"
-                    if ($serverFromSortedList -eq $serverFromList)
-                    {
+            foreach($serverFromWeb in $serversFromWeb) {
+                foreach($serverWithSamePlayerCount in $serversWithSamePlayerCount) {
+                    if ($serverWithSamePlayerCount -eq $serverFromWeb) {
                         $serverToSeed = $serverFromList
                         $found = $true
                         break;
@@ -441,20 +436,18 @@ do {
             }
         }
         
-        ### The server to seed has been picked
-        Write-Host "Server to Seed $serverToSeed"
-        
+        ### The server to seed has been picked        
         $continue = 1   
         $lastCheckForBetterServer=(GET-DATE)
         
         if( $currentlySeeding -eq $serverToSeed) {
-            Write-Host "Already Seeding the correct server"
+            Write-Host "Already Seeding the correct server" -ForegroundColor Green
         } else {
             $IP = $serverToSeed.split(":")
             $gameInfo = Get-SteamServerInfo -IPAddress $IP[0] -Port $IP[1] -Timeout 10000
             Write-Host ""
             Write-Host (timestamp) "$($gameInfo.ServerName.ToString()) selected for seeding!" -ForegroundColor Blue
-            Write-Host "Connecting to Server..."
+
             $currentlySeeding = $serverToSeed
             $steamConnect = 'steam://connect/' + $gameInfo.IPAddress + ':' + $gameInfo.Port
             
@@ -462,7 +455,7 @@ do {
 
             Start-Process -FilePath "$($steamDir.SteamExe)" -Wait -ArgumentList $steamConnect
             #Waits for splash and game window to appear, moves to another desktop env.
-                       
+
             $timeout = 0
             do{
                 Start-Sleep -Milliseconds 100
@@ -552,6 +545,7 @@ do {
         
         if($gameInfo.Players -gt $popGoal){
             Write-Host (timestamp) "Server is seeded with" ($gameInfo.Players.ToString()) "soldiers. Recon will scout for another server to seed." -ForegroundColor Green
+            continue
         }
     }
 
