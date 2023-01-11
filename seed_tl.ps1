@@ -425,7 +425,7 @@ do {
             foreach($serverFromWeb in $serversFromWeb) {
                 foreach($serverWithSamePlayerCount in $serversWithSamePlayerCount) {
                     if ($serverWithSamePlayerCount -eq $serverFromWeb) {
-                        $serverToSeed = $serverFromList
+                        $serverToSeed = $serverWithSamePlayerCount
                         $found = $true
                         break;
                     }
@@ -534,6 +534,11 @@ do {
                     Exit
                 }
             }
+            
+            if($gameInfo.Players -gt $popGoal) {
+                continue
+            }
+            
             Start-Sleep -Seconds $loopSleep
             
             #Check if its time to check the server statuses
