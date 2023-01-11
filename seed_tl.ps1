@@ -1,5 +1,5 @@
-﻿$localVersion = 2.5
-$configReq = 2
+﻿$localVersion = 3.0
+$configReq = 3
 
 $latestdl = 'https://od.lk/fl/NjJfMzM2NDI2M18'
 $elevate = "false"
@@ -83,7 +83,7 @@ if(Test-Path -Path $mydocs/seedscript/settings.txt){
     checkOtherServersIntervalMinutes=15
 
     # DONT CHANGE THIS
-    version=2"
+    version=3"
     if(-not (Test-Path $mydocs/seedscript/)){
         New-Item -Path $mydocs/seedscript/ -ItemType Directory | Out-Null
     }
@@ -177,7 +177,7 @@ if ($checkOtherServersIntervalMinutes -eq 0) {
 }
 
 #Create Local Vars
-$serverList=[Ordered]@{}
+$serverList=[ordered]@{}
 $steamDir = Get-ItemProperty -Path Registry::HKEY_CURRENT_USER\SOFTWARE\Valve\Steam -Name SteamExe
 $currentlySeeding = ""
 
@@ -345,13 +345,13 @@ do {
     $retry = 0
     
     if(-not ($serverSorted -eq $null)){
-        $serverSorted = @{}
-        $serverList = @{}
+        $serverSorted = [ordered]@{}
+        $serverList = [ordered]@{}
     }
 
     do {
         $error = 0
-        #Loop through server list and capture current population
+        #Loop through server list from the web and capture current population
         foreach ($server in $serversFromWeb){
             $IP = $server.Split(':')
             $gameInfo = Get-SteamServerInfo -IPAddress $IP[0] -Port $IP[1] -Timeout 10000 -ErrorAction SilentlyContinue
@@ -363,7 +363,7 @@ do {
             }
             #Desired servers
             elseif(($null -ne $gameInfo) -and ($gameInfo.Players -le $popGoal)){
-                Write-Host -ForegroundColor Yellow (timestamp)($gameInfo.ServerName.ToString() + " needs seeding and has $($gameInfo.Players.ToString()) Soliders.") 
+                Write-Host -ForegroundColor Yellow (timestamp)($gameInfo.ServerName.ToString() + " needs seeding and has $($gameInfo.Players.ToString()) Soliders.")
                 $serverList.Add($server, ($gameInfo.Players))
             }
             elseif($gameInfo.Players -gt $popGoal){
@@ -378,7 +378,7 @@ do {
         $retry = $retry + 1
         
         if($error -eq 1) {
-            Write-Host -ForegroundColor Red (timestamp) "API Failures Detected. Retry $($retry) of 3"
+            Write-Host -ForegroundColor Red (timestamp) "APFailures Detected. Retry $($retry) of 3"
             Start-Sleep -Seconds 10
         }
         
@@ -389,6 +389,7 @@ do {
     #Sort List
     $serverSorted = ($serverList.getenumerator() | Sort-Object -Property Value -Descending)
             
+    $serverToSeed = ""
     if($serverSorted -eq $null){
         Write-Host (timestamp) "There doesn't seem to be any servers in need of seeding!" -BackgroundColor White -ForegroundColor Black
         $continue = 0       
@@ -399,30 +400,62 @@ do {
         }
     }
     else {
+        #Find all servers with the same Player Count
+        $serversWithSameNumberOfPlayers = @()
         
-        if($serverSorted[0].Value -eq 0){
-            #Top server has no players, pick from top of serverList instead
-            $serverSorted = $serverList.clone()
+        Write-Host "Make a list of the servers"
+        foreach( $item in $serverSorted) {
+            if ($item.Value -eq $serverSorted[0].Value) {
+                $serversWithSameNumberOfPlayers += $item.Name
+            }
+            else {
+                break;
+            }
         }
-                
-        $continue = 1
-        #$IP = $serverSorted[0].Name.Split(':')
-        #$gameInfo = Get-SteamServerInfo -IPAddress $IP[0] -Port $IP[1] -Timeout 10000
-        #Write-Host ""
-        #Write-Host (timestamp) "$($gameInfo.ServerName.ToString()) selected for seeding!" -ForegroundColor Blue
+ 
+        if ($serversWithSameNumberOfPlayers.count -eq 1) {
+            #If there is only one server with the max user count
+            #we are done and can pick the top server
+            Write-Host "Only one with the same high playercount"
+            $serverToSeed = $serverSorted[0].Name 
+        }
+        else {
+            #If there are several servers with the same player count
+            #Pick by priorty of servers from the web.
+            Write-Host "Multiple with the same high playercount"
+            $found = $false
+            foreach($serverFromList in $serversFromWeb) {
+                foreach($serverFromSortedList in $serversWithSameNumberOfPlayers)
+                {
+                    Write-Host "$serverFromList compared to $serverFromSortedList"
+                    if ($serverFromSortedList -eq $serverFromList)
+                    {
+                        $serverToSeed = $serverFromList
+                        $found = $true
+                        break;
+                    }
+                }
+                if ($found -eq $true) {
+                    break;
+                }
+            }
+        }
         
+        ### The server to seed has been picked
+        Write-Host "Server to Seed $serverToSeed"
+        
+        $continue = 1   
         $lastCheckForBetterServer=(GET-DATE)
         
-        if( $currentlySeeding -eq $serverSorted[0].Name) {
+        if( $currentlySeeding -eq $serverToSeed) {
             Write-Host "Already Seeding the correct server"
         } else {
-            
-            $IP = $serverSorted[0].Name.Split(':')
+            $IP = $serverToSeed.split(":")
             $gameInfo = Get-SteamServerInfo -IPAddress $IP[0] -Port $IP[1] -Timeout 10000
             Write-Host ""
             Write-Host (timestamp) "$($gameInfo.ServerName.ToString()) selected for seeding!" -ForegroundColor Blue
             Write-Host "Connecting to Server..."
-            $currentlySeeding = $serverSorted[0].Name
+            $currentlySeeding = $serverToSeed
             $steamConnect = 'steam://connect/' + $gameInfo.IPAddress + ':' + $gameInfo.Port
             
             Start-Sleep -Milliseconds 100
