@@ -92,16 +92,16 @@ if(Test-Path -Path $mydocs/seedscript/settings.txt){
 
 #############################################################################################
 
-Write-Host ""
-Write-Host "     -The Line- Seeding Script     "  -ForegroundColor Magenta
-Write-Host ""
-Write-Host ""
-Write-Host "original idea and implementation by" -ForegroundColor Magenta
+Write-Host "                                   "
+Write-Host "     -The Line- Seeding Script     " -ForegroundColor Magenta
+Write-Host "                                   "
+Write-Host "                                   "
+Write-Host "     idea and implementation by    " -ForegroundColor Magenta
 Write-Host "              Tommy                " -ForegroundColor Magenta
-Write-Host ""
-Write-Host "      additional features by       " -ForegroundColor Magenta
+Write-Host "                                   "
+Write-Host "       additional developer        " -ForegroundColor Magenta
 Write-Host "           SwedishNinja            " -ForegroundColor Magenta
-Write-Host ""
+Write-Host "                                   "
 Write-Host "VERSION :" $localversion
 Write-Host ""
 Write-Host ""
