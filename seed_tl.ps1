@@ -229,7 +229,8 @@ Function timeframe {
     return $result
 }
 if(-not (timeframe)){
-    Write-Host "The scheduler has prevented seeding." -BackgroundColor Red
+    Write-Host "The scheduler has prevented seeding. Check your settings.txt file." -BackgroundColor Red
+    Start-Sleep -Seconds 10
     break
 }
 
@@ -486,7 +487,7 @@ do {
             }while((-not ($timeout -gt 300)) -or ($location -ne 'seeding'))
             
             Start-Sleep -Seconds $launchSleep
-            $SeedStart=(GET-DATE)
+            $seedStartTime=(GET-DATE)
         }
         do {
             $IP = $currentlySeeding.Split(':')
@@ -502,7 +503,7 @@ do {
             elseif($steamUserSummary.Contains('gameserverip') -or $steamUserSummary.Contains('"personastate":0')){
                 if($gameInfo -ne $null){
                     $SeedCurrent=(GET-DATE)
-                    $since = NEW-TIMESPAN –Start $SeedStart –End $SeedCurrent
+                    $since = NEW-TIMESPAN –Start $seedStartTime –End $SeedCurrent
                     $sinceStamp = "[$([math]::Round($since.TotalMinutes))m]"
                     Write-Host (timestamp)(&{If($setting.sincestamp) {($sinceStamp)}}) "$($gameInfo.Players.ToString()) soldiers on $($gameInfo.ServerName)" -ForegroundColor Blue
                     if($steamUserSummary.Contains('"personastate":0')){
