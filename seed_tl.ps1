@@ -16,74 +16,72 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 #Generate Settings File
 $mydocs = [Environment]::GetFolderPath("MyDocuments")
-if(Test-Path -Path $mydocs/seedscript/settings.txt){
-    
-}else{
-    #Dont edit these, this is simply for the settings generation
-    $settings = "[GENERAL]
-    # 1 = true | enabled
-    # 0 = false | disabled
+if(-not(Test-Path -Path $mydocs/seedscript/settings.txt)){
+#Dont edit these, this is simply for the settings generation
+$settings = "[GENERAL]
+# 1 = true | enabled
+# 0 = false | disabled
 
-    # Show Warning at script start. Recommended you only disable this after you set it up so you can read the prompt.
-    iKnowWhatImDoing=0
+# Show Warning at script start. Recommended you only disable this after you set it up so you can read the prompt.
+iKnowWhatImDoing=0
 
-    # Move console to seeding desktop
-    # Remember Win+Tab to switch desktops
-    moveConsole=0
+# Move console to seeding desktop
+# Remember Win+Tab to switch desktops
+moveConsole=0
 
-    # Closes game after looping through once
-    # Reopens if a server requires seeding (If super seeding is enabled)
-    # This could be annoying if you wanted to play the game while seeding.
-    closeGame=1
+# Closes game after looping through once
+# Reopens if a server requires seeding (If super seeding is enabled)
+# This could be annoying if you wanted to play the game while seeding.
+closeGame=1
 
-    # Kills the game if the seeding batch is terminated
-    # This could be annoying if you wanted to play the game while seeding and batch terminated.
-    closeGameConsole=1
+# Kills the game if the seeding batch is terminated
+# This could be annoying if you wanted to play the game while seeding and batch terminated.
+closeGameConsole=1
 
-    # Continuous Seeding
-    # If true, loops continuously, otherwise seeds all servers once
-    superSeeder=0
+# Continuous Seeding
+# If true, loops continuously, otherwise seeds all servers once
+superSeeder=0
 
-    # Scheduler to stop seeding if not in accepted range.
-    # seedStart and seedEnd are hour values in the 24h format.
-    # i.e 8-18 is 8AM-6PM, 18-8 is 6PM to 8AM.
-    schdulerEnabled=0
-    seedStart=8
-    seedEnd=22
+# Scheduler to stop seeding if not in accepted range.
+# seedStart and seedEnd are hour values in the 24h format.
+# i.e 8-18 is 8AM-6PM, 18-8 is 6PM to 8AM.
+schdulerEnabled=0
+seedStart=8
+seedEnd=22
 
-    [ADVANCED]
-    # How long in seconds to wait before checking the server for your presence.
-    # Extra time after the HLL window opens, for you to join the server.
-    launchSleep=60
+[ADVANCED]
+# How long in seconds to wait before checking the server for your presence.
+# Extra time after the HLL window opens, for you to join the server.
+launchSleep=60
 
-    # Show Sincestamps (How long you've been seeding current server).
-    sincestamp=1
+# Show Sincestamps (How long you've been seeding current server).
+sincestamp=1
 
-    # Show Timestamps
-    timestamps=1
+# Show Timestamps
+timestamps=1
 
-    # Number of population to wait before disconnecting and moving on.
-    popGoal=60
+# Number of population to wait before disconnecting and moving on.
+popGoal=60
 
-    # Wait for input after seeding completes (If superseeding is disabled)
-    # Allowing user to read the log.
-    waitForInput=1
+# Wait for input after seeding completes (If superseeding is disabled)
+# Allowing user to read the log.
+waitForInput=1
 
-    # How often in seconds to repeate main loop (Check current pop).
-    # This increases API calls, be careful. 100k rate limit per day. (Recommended value above 10)
-    loopSleep=60
+# How often in seconds to repeate main loop (Check current pop).
+# This increases API calls, be careful. 100k rate limit per day. (Recommended value above 10)
+loopSleep=60
 
-    # Check for updates?
-    updater=1
+# Check for updates?
+updater=1
 
-    # Verbose outputs for debug or nerds.
-    verbose=0
+# Verbose outputs for debug or nerds.
+verbose=0
 
-    # How often to check other servers
-    checkOtherServersIntervalMinutes=15
+# How often to check other servers
+checkOtherServersIntervalMinutes=15
 
-    # DONT CHANGE THIS
-    version=3"
+# DONT CHANGE THIS
+version=3"
     if(-not (Test-Path $mydocs/seedscript/)){
         New-Item -Path $mydocs/seedscript/ -ItemType Directory | Out-Null
     }
