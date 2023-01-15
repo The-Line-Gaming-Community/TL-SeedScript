@@ -441,7 +441,7 @@ do {
         $continue = 1   
         $lastCheckForBetterServer=(GET-DATE)
         
-        if( $currentlySeeding -eq $serverToSeed) {
+        if ($currentlySeeding -eq $serverToSeed) {
             Write-Host "Already Seeding the correct server" -ForegroundColor Green
         } else {
             $IP = $serverToSeed.split(":")
@@ -464,10 +464,11 @@ do {
                 if ((Find-WindowHandle "EAC Launcher" -erroraction 'SilentlyContinue') -gt 0){
                     Get-Desktop ((Get-DesktopCount)-1) | Move-Window (Find-WindowHandle "EAC Launcher") -erroraction 'silentlycontinue' | Out-Null
                     if($verbose -eq 1){
-                    Write-Host "SPLASH FOUND"
+                        Write-Host "SPLASH FOUND"
                     }
                 }
             }while(-not (($timeout -gt 100) -or ((Find-WindowHandle "EAC Launcher") -gt 0) -or (Get-Process -Name 'HLL-Win64-Shipping' -ErrorAction SilentlyContinue)))
+
             $timeout = 0
             do{
                 Start-Sleep -Milliseconds 100
@@ -481,10 +482,10 @@ do {
                     Start-Sleep -Milliseconds 100
                     Switch-Desktop ($currentEnv) -erroraction 'SilentlyContinue'
                     if($verbose -eq 1){
-                        Write-Host "GAME FOUND"
+                        Write-Host "GAME FOUND (Retries: $timeout or 300)  Location is : $location"
                     }
                 }
-            }while((-not ($timeout -gt 300)) -or ($location -ne 'seeding'))
+            } while((-not ($timeout -gt 300)) -or ($location -ne 'seeding'))
             
             Start-Sleep -Seconds $launchSleep
             $seedStartTime=(GET-DATE)
