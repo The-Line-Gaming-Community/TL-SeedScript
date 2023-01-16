@@ -14,6 +14,50 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     }
 }
 
+# Set window size
+function Set-WindowSize {
+    [CmdletBinding(DefaultParameterSetName = "MaxSize")]
+    param(
+        [Parameter(Mandatory, ParameterSetName = "CustomSize")]
+        [ValidateScript({ $_ -gt 0})]
+        # Target Height
+        [int] $Height = 50,
+
+        [Parameter(Mandatory, ParameterSetName = "CustomSize")]
+        [ValidateScript({ $_ -gt 0})]
+        # Target Width
+        [int] $Width = 120,
+
+        [Parameter(ParameterSetName = "MaxSize")]
+        # Maximize the window
+        [switch] $Maximize = $false
+        )
+    
+    $maxHeight = $Host.UI.RawUI.MaxPhysicalWindowSize.Height 
+    $maxWidth = $Host.UI.RawUI.MaxPhysicalWindowSize.Width 
+    if ($Maximize) {
+        $Height = $maxHeight
+        $Width  = $maxWidth - 2
+    }
+
+    $consoleBuffer = $Host.UI.RawUI.BufferSize 
+    $consoleWindow = $Host.UI.RawUI.WindowSize 
+ 
+    $consoleWindow.Height = ($Height) 
+    $consoleWindow.Width = ($Width) 
+
+    #$consoleBuffer.Height = (9999)
+    $consoleBuffer.Height = (9000)
+    $consoleBuffer.Width = ($Width) 
+
+    $Host.UI.RawUI.FlushInputBuffer()
+    $Host.UI.RawUI.set_bufferSize($consoleBuffer) 
+    $Host.UI.RawUI.set_windowSize($consoleWindow) 
+}
+
+Set-WindowSize -Height 20 -Width 120 -erroraction 'silentlycontinue'
+
+
 #Generate Settings File
 $mydocs = [Environment]::GetFolderPath("MyDocuments")
 if(-not(Test-Path -Path $mydocs/seedscript/settings.txt)){
@@ -93,15 +137,11 @@ version=3"
 Write-Host "                                   "
 Write-Host "     -The Line- Seeding Script     " -ForegroundColor Magenta
 Write-Host "                                   "
-Write-Host "                                   "
-Write-Host "     idea and implementation by    " -ForegroundColor Magenta
+Write-Host "            developers             " -ForegroundColor Magenta
 Write-Host "              Tommy                " -ForegroundColor Magenta
-Write-Host "                                   "
-Write-Host "       additional developer        " -ForegroundColor Magenta
 Write-Host "           SwedishNinja            " -ForegroundColor Magenta
 Write-Host "                                   "
 Write-Host "VERSION :" $localversion
-Write-Host ""
 Write-Host ""
 Write-Host "Preparing..." -ForegroundColor Black -BackgroundColor White -NoNewline
 
