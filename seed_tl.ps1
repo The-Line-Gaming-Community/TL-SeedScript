@@ -89,9 +89,6 @@ function Set-WindowSize {
     $Host.UI.RawUI.set_windowSize($consoleWindow) 
 }
 
-Set-WindowSize -Height 20 -Width 120 -erroraction 'silentlycontinue'
-
-
 #Generate Settings File
 $mydocs = [Environment]::GetFolderPath("MyDocuments")
 if(-not(Test-Path -Path $mydocs/seedscript/settings.txt)){
@@ -440,12 +437,15 @@ do {
     Write-Host ""
     $retry = 0
     
-    if(-not ($serverSorted -eq $null)){
-        $serverSorted = [ordered]@{}
-        $serverList = [ordered]@{}
-    }
-
     do {
+        if(-not ($serverSorted -eq $null)){
+            $serverSorted = [ordered]@{}
+        }
+        
+        if(-not ($serverList -eq $null)){
+            $serverList = [ordered]@{}
+        }   
+             
         $error = 0
         #Loop through server list from the web and capture current population
         foreach ($server in $serversFromWeb){
