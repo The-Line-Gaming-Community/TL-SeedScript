@@ -501,18 +501,38 @@ do {
 
             $timeout = 0
             do{
+                if ($timeout -gt 310) {
+                    Write-Host "(timestamp) Something bad happened, still looping through and erroring out. ($timeout)"
+                    Write-Host "(timestamp) Slowing down the script"
+                    Start-Sleep -Seconds 10
+                    if ($timeout -gt 400) {
+                        Write-Host "(timestamp) Things have been bad for a while, shutting down game"
+                        Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
+                    }             
+                }
+                
                 Start-Sleep -Milliseconds 100
                 $timeout = $timeout + 1
                 if ((Find-WindowHandle "EAC Launcher" -erroraction 'SilentlyContinue') -gt 0){
                     Get-Desktop ((Get-DesktopCount)-1) | Move-Window (Find-WindowHandle "EAC Launcher") -erroraction 'silentlycontinue' | Out-Null
                     if($verbose -eq 1){
-                        Write-Host "SPLASH FOUND"
+                        Write-Host "(timestamp) SPLASH FOUND"
                     }
                 }
             }while(-not (($timeout -gt 100) -or ((Find-WindowHandle "EAC Launcher") -gt 0) -or (Get-Process -Name 'HLL-Win64-Shipping' -ErrorAction SilentlyContinue)))
 
             $timeout = 0
             do{
+                if ($timeout -gt 310) {
+                    Write-Host "(timestamp) Something bad happened, still looping through this stuff. ($timeout)"
+                    Write-Host "(timestamp) Slowing down the logging"
+                    Start-Sleep -Seconds 10
+                    if ($timeout -gt 400) {
+                        Write-Host "(timestamp) Things have been bad for a while, shutting down game"
+                        Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
+                    }             
+                }
+                
                 Start-Sleep -Milliseconds 100
                 $timeout = $timeout + 1
                 $location = Find-WindowHandle "Hell Let Loose" -ErrorAction 'SilentlyContinue' | Get-DesktopFromWindow -ErrorAction 'SilentlyContinue' | Get-DesktopName -ErrorAction 'SilentlyContinue'
@@ -524,7 +544,7 @@ do {
                     Start-Sleep -Milliseconds 100
                     Switch-Desktop ($currentEnv) -erroraction 'SilentlyContinue'
                     if($verbose -eq 1){
-                        Write-Host "GAME FOUND (Retries: $timeout or 300)  Location is : $location"
+                        Write-Host "(timestamp) GAME FOUND (Retries: $timeout of 300)  Location is : $location"
                     }
                 }
             } while((-not ($timeout -gt 300)) -or ($location -ne 'seeding'))
