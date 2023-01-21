@@ -14,40 +14,6 @@ if (-Not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     }
 }
 
-function MoveResize-Console-Window
-{
-
-param(
-[Parameter(Mandatory=$True)]
-   [int]$PosX,
-[Parameter(Mandatory=$True)]
-   [int]$PosY,
-[Parameter(Mandatory=$True)]
-   [int]$Width,
-[Parameter(Mandatory=$True)]
-   [int]$Height
-)
-
-$WinPosSignature=@' 
-[DllImport("user32.dll")] 
-public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
-'@
-
-$ForeWindowSignature=@'
-[DllImport("user32.dll")]
-public static extern IntPtr GetForegroundWindow();
-'@
-
-# C# declarations
-$WinPos = Add-Type -memberDefinition $WinPosSignature -name "Win32SetWindowPos" -Namespace Win32Functions -PassThru
-$ForeWin = Add-Type -memberDefinition $ForeWindowSignature -name "Win32GetForegroundWindow" -Namespace Win32Functions -PassThru
-
-$handle=$ForeWin::GetForegroundWindow();
-
-#window handle, ? (0), pos x, pos y, width, height, ? (SWP_NOZORDER | SWP_SHOWWINDOW)
-$tempVar = $WinPos::SetWindowPos($handle, 0, $PosX, $PosY, $Width, $Height, 0)
-}
-
 # Set window size
 function Set-WindowSize {
     [CmdletBinding(DefaultParameterSetName = "MaxSize")]
@@ -89,9 +55,6 @@ function Set-WindowSize {
     $Host.UI.RawUI.set_windowSize($consoleWindow) 
 }
 
-Set-WindowSize -Height 20 -Width 120 -erroraction 'silentlycontinue'
-
-
 #Generate Settings File
 $mydocs = [Environment]::GetFolderPath("MyDocuments")
 if(-not(Test-Path -Path $mydocs/seedscript/settings.txt)){
@@ -129,7 +92,6 @@ seedEnd=22
 
 # Resize the console window on startup
 resizeWindow = 0
-resizeAlternateMethod = 0
 
 [ADVANCED]
 # How long in seconds to wait before checking the server for your presence.
@@ -247,28 +209,10 @@ $seedStart = [int]($setting.seedStart)
 $seedEnd = [int]($setting.seedEnd)
 $checkOtherServersIntervalMinutes = [int]($setting.checkOtherServersIntervalMinutes)
 $resizeWindow = [int]($setting.resizeWindow)
-$resizeAlternateMethod = [int]($setting.resizeAlternateMethod)
-
-if ($checkOtherServersIntervalMinutes -eq 0) {
-    Write-Host "Server Interval Check not set: default to 15 minutes"
-    $checkOtherServersIntervalMinutes = 15
-}
 
 #Resize the window
 if ($resizeWindow -eq 1) {
-    if ($resizeAlternateMethod -eq 0) {
-        if($verbose -eq 1){
-            Write-Host "Resizing using Set-WindowSize..."
-        }
-        Set-WindowSize -Height 20 -Width 120 -erroraction 'silentlycontinue'
-    } else {
-        if($verbose -eq 1){
-            Write-Host "Resizing using MoveResize-Console-Window..."
-        }
-        MoveResize-Console-Window -PosX -10 -PosY 10 -Width 1200 -Height 450
-        [console]::BufferWidth = [console]::WindowWidth
-        [console]::BufferHeight = [console]::WindowHeight
-    }
+    Set-WindowSize -Height 20 -Width 120 -erroraction 'silentlycontinue'
 }
 
 #Create Local Vars
@@ -440,12 +384,15 @@ do {
     Write-Host ""
     $retry = 0
     
-    if(-not ($serverSorted -eq $null)){
-        $serverSorted = [ordered]@{}
-        $serverList = [ordered]@{}
-    }
-
     do {
+        if(-not ($serverSorted -eq $null)){
+            $serverSorted = [ordered]@{}
+        }
+        
+        if(-not ($serverList -eq $null)){
+            $serverList = [ordered]@{}
+        }   
+             
         $error = 0
         #Loop through server list from the web and capture current population
         foreach ($server in $serversFromWeb){
