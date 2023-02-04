@@ -309,7 +309,7 @@ if($iKnowWhatImDoing -eq 0){
 }
 
 # API Key Check
-if(Test-Path -Path C:\Users\$env:UserName\AppData\Roaming\SteamPS\SteamPSKey.json){
+if(Test-Path -Path $env:AppData\SteamPS\SteamPSKey.json){
   
 }else{
     Write-Host `n
@@ -392,7 +392,7 @@ do {
         if(-not ($serverList -eq $null)){
             $serverList = [ordered]@{}
         }   
-             
+
         $error = 0
         #Loop through server list from the web and capture current population
         foreach ($server in $serversFromWeb){
@@ -495,18 +495,17 @@ do {
             $steamConnect = 'steam://connect/' + $gameInfo.IPAddress + ':' + $gameInfo.Port
             
             Start-Sleep -Milliseconds 100
-
             Start-Process -FilePath "$($steamDir.SteamExe)" -Wait -ArgumentList $steamConnect
             #Waits for splash and game window to appear, moves to another desktop env.
 
             $timeout = 0
             do{
                 if ($timeout -gt 310) {
-                    Write-Host "(timestamp) Something bad happened, still looping through and erroring out. ($timeout)"
-                    Write-Host "(timestamp) Slowing down the script"
+                    Write-Host (timestamp) "Something bad happened, still looping through and erroring out. ($timeout)"
+                    Write-Host (timestamp) "Slowing down the script"
                     Start-Sleep -Seconds 10
                     if ($timeout -gt 400) {
-                        Write-Host "(timestamp) Things have been bad for a while, shutting down game"
+                        Write-Host (timestamp) "Things have been bad for a while, shutting down game"
                         Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
                     }             
                 }
@@ -516,7 +515,7 @@ do {
                 if ((Find-WindowHandle "EAC Launcher" -erroraction 'SilentlyContinue') -gt 0){
                     Get-Desktop ((Get-DesktopCount)-1) | Move-Window (Find-WindowHandle "EAC Launcher") -erroraction 'silentlycontinue' | Out-Null
                     if($verbose -eq 1){
-                        Write-Host "(timestamp) SPLASH FOUND"
+                        Write-Host (timestamp) "SPLASH FOUND"
                     }
                 }
             }while(-not (($timeout -gt 100) -or ((Find-WindowHandle "EAC Launcher") -gt 0) -or (Get-Process -Name 'HLL-Win64-Shipping' -ErrorAction SilentlyContinue)))
@@ -524,11 +523,11 @@ do {
             $timeout = 0
             do{
                 if ($timeout -gt 310) {
-                    Write-Host "(timestamp) Something bad happened, still looping through this stuff. ($timeout)"
-                    Write-Host "(timestamp) Slowing down the logging"
+                    Write-Host (timestamp) "Something bad happened, still looping through this stuff. ($timeout)"
+                    Write-Host (timestamp) "Slowing down the logging"
                     Start-Sleep -Seconds 10
                     if ($timeout -gt 400) {
-                        Write-Host "(timestamp) Things have been bad for a while, shutting down game"
+                        Write-Host (timestamp) "Things have been bad for a while, shutting down game"
                         Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
                     }             
                 }
@@ -544,7 +543,7 @@ do {
                     Start-Sleep -Milliseconds 100
                     Switch-Desktop ($currentEnv) -erroraction 'SilentlyContinue'
                     if($verbose -eq 1){
-                        Write-Host "(timestamp) GAME FOUND (Retries: $timeout of 300)  Location is : $location"
+                        Write-Host (timestamp) "GAME FOUND (Retries: $timeout of 300)  Location is : $location"
                     }
                 }
             } while((-not ($timeout -gt 300)) -or ($location -ne 'seeding'))
