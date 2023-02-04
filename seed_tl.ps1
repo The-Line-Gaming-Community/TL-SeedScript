@@ -137,8 +137,8 @@ version=3"
 Write-Host "                                   "
 Write-Host "     -The Line- Seeding Script     " -ForegroundColor Magenta
 Write-Host "                                   "
-Write-Host "            developers             " -ForegroundColor Magenta
-Write-Host "              Tommy                " -ForegroundColor Magenta
+Write-Host "            Developers             " -ForegroundColor Magenta
+Write-Host "           トミー(Tommy) &            " -ForegroundColor Magenta
 Write-Host "           SwedishNinja            " -ForegroundColor Magenta
 Write-Host "                                   "
 Write-Host "VERSION :" $localversion
