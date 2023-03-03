@@ -1,4 +1,4 @@
-﻿$localVersion = 3.0
+﻿$localVersion = 3.1
 $configReq = 3
 
 $latestdl = 'https://od.lk/fl/NjJfMzM2NDI2M18'
@@ -21,18 +21,18 @@ function Set-WindowSize {
         [Parameter(Mandatory, ParameterSetName = "CustomSize")]
         [ValidateScript({ $_ -gt 0})]
         # Target Height
-        [int] $Height = 50,
+        [int] $Height,
 
         [Parameter(Mandatory, ParameterSetName = "CustomSize")]
         [ValidateScript({ $_ -gt 0})]
         # Target Width
-        [int] $Width = 120,
+        [int] $Width,
 
         [Parameter(ParameterSetName = "MaxSize")]
         # Maximize the window
         [switch] $Maximize = $false
-        )
-    
+    )
+
     $maxHeight = $Host.UI.RawUI.MaxPhysicalWindowSize.Height 
     $maxWidth = $Host.UI.RawUI.MaxPhysicalWindowSize.Width 
     if ($Maximize) {
@@ -46,13 +46,30 @@ function Set-WindowSize {
     $consoleWindow.Height = ($Height) 
     $consoleWindow.Width = ($Width) 
 
-    #$consoleBuffer.Height = (9999)
     $consoleBuffer.Height = (9000)
     $consoleBuffer.Width = ($Width) 
 
     $Host.UI.RawUI.FlushInputBuffer()
-    $Host.UI.RawUI.set_bufferSize($consoleBuffer) 
-    $Host.UI.RawUI.set_windowSize($consoleWindow) 
+    $Host.UI.RawUI.bufferSize = $consoleBuffer
+    $Host.UI.RawUI.windowSize = $consoleWindow
+}
+
+#Scheduler, returns 1/0 if current hour is within configured range.
+Function timeframe {
+    $hour = [int](Get-Date -Format "HH")
+    if($scheduler -eq 0){
+        $result = 1
+    }
+    elseif(($seedStart -le $seedEnd) -and ($hour -ge $seedStart) -and ($hour -lt $seedEnd)){
+        $result = 1
+    }
+    elseif(($seedEnd -le $seedStart) -and (($hour -ge $seedStart) -or ($hour -lt $seedEnd))){
+        $result = 1
+    }
+    else{
+        $result = 0
+    }
+    return $result
 }
 
 #Generate Settings File
@@ -138,10 +155,10 @@ Write-Host "                                   "
 Write-Host "     -The Line- Seeding Script     " -ForegroundColor Magenta
 Write-Host "                                   "
 Write-Host "            Developers             " -ForegroundColor Magenta
-Write-Host "           トミー(Tommy) &            " -ForegroundColor Magenta
+Write-Host "              Tommy &              " -ForegroundColor Magenta
 Write-Host "           SwedishNinja            " -ForegroundColor Magenta
 Write-Host "                                   "
-Write-Host "VERSION :" $localversion
+Write-Host "VERSION :" $localversion.ToString("N1")
 Write-Host ""
 Write-Host "Preparing..." -ForegroundColor Black -BackgroundColor White -NoNewline
 
@@ -186,7 +203,7 @@ if($configReq -gt ($setting.version)){
         Remove-Item $mydocs/seedscript/settings.txt
         break
     } else{
-        ii $mydocs/seedscript/
+        Invoke-Item $mydocs/seedscript/
         break
     }
 }
@@ -197,10 +214,7 @@ $launchSleep = ($setting.launchSleep)
 $moveConsole = ($setting.moveConsole)
 $popGoal = ($setting.popGoal)
 $loopSleep = ($setting.loopSleep)
-$closeGameConsole = ($setting.closeGameConsole)
 $closeGame = ($setting.closeGame)
-$tl = ($setting.timestamps)
-$serversFromWeb = ((Invoke-webrequest -UseBasicParsing -URI "http://131.153.65.166/files/seedscript/servers.txt").Content).Split(",")
 $verbose = ($setting.verbose)
 $updater = ($setting.updater)
 $waitForInput = ($setting.waitForInput)
@@ -212,7 +226,7 @@ $resizeWindow = [int]($setting.resizeWindow)
 
 #Resize the window
 if ($resizeWindow -eq 1) {
-    Set-WindowSize -Height 20 -Width 120 -erroraction 'silentlycontinue'
+    Set-WindowSize -Height 150 -Width 600 -erroraction 'silentlycontinue'
 }
 
 #Create Local Vars
@@ -220,12 +234,23 @@ $serverList=[ordered]@{}
 $steamDir = Get-ItemProperty -Path Registry::HKEY_CURRENT_USER\SOFTWARE\Valve\Steam -Name SteamExe
 $currentlySeeding = ""
 
+$serversFromWeb = (Invoke-WebRequest -Method Get -Uri "http://131.153.65.166/files/seedscript/servers.txt" -UseBasicParsing).Content.Split(",")
+if($verbose -eq 1){
+    Write-Host "Servers To Seed: " $serversFromWeb
+}
+
 #Check for Updates
 if($updater -eq 1){
     Write-Host ""
     Write-Host "Checking for Updates..."
-    $remoteVersionRaw = (Invoke-webrequest -UseBasicParsing -URI "http://131.153.65.166/files/seedscript/version.txt").Content
-    $changeLog = (Invoke-webrequest -UseBasicParsing -URI "http://131.153.65.166/files/seedscript/changelog.txt").Content
+    $remoteVersionRaw = (Invoke-WebRequest -Method Get -Uri "http://131.153.65.166/files/seedscript/version.txt" -UseBasicParsing).Content
+    $changeLog = (Invoke-WebRequest -Method Get -Uri "http://131.153.65.166/files/seedscript/changelog.txt" -UseBasicParsing).Content
+
+    if($verbose -eq 1){
+        Write-Host "RemoteVersion Response: " $remoteVersionRaw
+        Write-Host "ChangeLog Response: " $changeLog
+    }
+
     $remoteVersion = [double]$remoteVersionRaw
     Write-Host ""
     if($remoteVersion -gt $localVersion){
@@ -242,31 +267,14 @@ if($updater -eq 1){
         $choice = Read-Host -Prompt 'Would you like to download it now? (y/n)'
     }
     if($choice -eq 'y' -or $choice -eq 'yes'){
-        Start $latestdl
+        Start-Process $latestdl
         if($elevate -eq "false"){
-            ii .
+            Invoke-Item .
         }
         break
     }
 }
 
-#Scheduler, returns 1/0 if current hour is within configured range.
-Function timeframe {
-    $hour = [int](Get-Date -Format "HH")
-    if($scheduler -eq 0){
-        $result = 1
-    }
-    elseif(($seedStart -le $seedEnd) -and ($hour -ge $seedStart) -and ($hour -lt $seedEnd)){
-        $result = 1
-    }
-    elseif(($seedEnd -le $seedStart) -and (($hour -ge $seedStart) -or ($hour -lt $seedEnd))){
-        $result = 1
-    }
-    else{
-        $result = 0
-    }
-    return $result
-}
 if(-not (timeframe)){
     Write-Host "The scheduler has prevented seeding. Check your settings.txt file." -BackgroundColor Red
     Start-Sleep -Seconds 10
@@ -279,9 +287,9 @@ if($verbose -eq 1){
     $ErrorActionPreference = "SilentlyContinue"
     Write-Host "Checking Dependancies..."
 }
-if(-not (Get-Module -ListAvailable -Name SteamPS)){Install-Module SteamPS -Scope CurrentUser -Force}
-if(-not (Get-Module -ListAvailable -Name NUGet)){Install-Module NUGet -Scope CurrentUser -Force}
-if(-not (Get-Module -ListAvailable -Name VirtualDesktop)){Install-Module VirtualDesktop -Scope CurrentUser -Force}
+if(-not (Get-Module -ListAvailable -Name SteamPS))          {Install-Module SteamPS -Scope CurrentUser -Force}
+if(-not (Get-Module -ListAvailable -Name NUGet))            {Install-Module NUGet -Scope CurrentUser -Force}
+if(-not (Get-Module -ListAvailable -Name VirtualDesktop))   {Install-Module VirtualDesktop -Scope CurrentUser -Force}
 
 # Information Notice
 if($iKnowWhatImDoing -eq 0){
@@ -303,7 +311,7 @@ if($iKnowWhatImDoing -eq 0){
     Write-Host "Would you like to open the settings directory and configure it now?"
     $choice = Read-Host -Prompt '(y/yes) will open the location, otherwise enter will continue.'
     if($choice -eq 'y' -or $choice -eq 'yes'){
-        ii $mydocs/seedscript/
+        Invoke-Item $mydocs/seedscript/
         break
     }
 }
@@ -321,7 +329,7 @@ if(Test-Path -Path $env:AppData\SteamPS\SteamPSKey.json){
     Write-Host "#-----------  YOU CAN USE LOCALHOST AS DOMAIN NAME : COPY API KEY  ------------#" -ForegroundColor red
     Write-Host "#-------------------  R-CLICK TO PASTE IT IN PROMPT BELOW  --------------------#" -ForegroundColor red
     Write-Host "################################################################################" -ForegroundColor red
-    Start https://steamcommunity.com/dev/apikey
+    Start-Process https://steamcommunity.com/dev/apikey
     Connect-SteamAPI
 }
 
@@ -385,15 +393,15 @@ do {
     $retry = 0
     
     do {
-        if(-not ($serverSorted -eq $null)){
+        if(-not ($null -eq $serverSorted)){
             $serverSorted = [ordered]@{}
         }
         
-        if(-not ($serverList -eq $null)){
+        if(-not ($null -eq $serverList)){
             $serverList = [ordered]@{}
         }   
 
-        $error = 0
+        $errorGettingData = 0
         #Loop through server list from the web and capture current population
         foreach ($server in $serversFromWeb){
             $IP = $server.Split(':')
@@ -414,13 +422,13 @@ do {
             }
             else{
                 Write-Host -ForegroundColor Red (timestamp) "$IP did not respond... Map Change? Crashed server? API failure?"
-                $error = 1
+                $errorGettingData = 1
             }
             Start-Sleep -Milliseconds 500
         }
         $retry = $retry + 1
         
-        if($error -eq 1) {
+        if($errorGettingData -eq 1) {
             Write-Host -ForegroundColor Red (timestamp) "APFailures Detected. Retry $($retry) of 3"
             Start-Sleep -Seconds 10
         }
@@ -434,12 +442,13 @@ do {
 
     ### Pick a server to seed
     $serverToSeed = ""
-    if($serverSorted -eq $null){
+    if($null -eq $serverSorted){
         Write-Host (timestamp) "There doesn't seem to be any servers in need of seeding!" -BackgroundColor White -ForegroundColor Black
         $continue = 0       
         
         if(($closeGame -eq 1) -and ($setting.superSeeder -eq 1)){
             Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
+            $currentlySeeding = ""
             Start-Sleep -Seconds 5
         }
     }
@@ -507,6 +516,7 @@ do {
                     if ($timeout -gt 400) {
                         Write-Host (timestamp) "Things have been bad for a while, shutting down game"
                         Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
+                        $currentlySeeding = ""
                     }             
                 }
                 
@@ -529,6 +539,7 @@ do {
                     if ($timeout -gt 400) {
                         Write-Host (timestamp) "Things have been bad for a while, shutting down game"
                         Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
+                        $currentlySeeding = ""
                     }             
                 }
                 
@@ -536,8 +547,6 @@ do {
                 $timeout = $timeout + 1
                 $location = Find-WindowHandle "Hell Let Loose" -ErrorAction 'SilentlyContinue' | Get-DesktopFromWindow -ErrorAction 'SilentlyContinue' | Get-DesktopName -ErrorAction 'SilentlyContinue'
                 $currentEnv = Get-CurrentDesktop -erroraction 'SilentlyContinue' | Get-DesktopIndex -ErrorAction 'SilentlyContinue'
-                $windowIndex = Find-WindowHandle "Hell Let Loose" -erroraction 'SilentlyContinue' | Get-DesktopFromWindow -ErrorAction 'SilentlyContinue' | Get-DesktopIndex -ErrorAction 'SilentlyContinue'
-                $focused = Find-WindowHandle "Hell Let Loose" -erroraction 'SilentlyContinue' | Test-Window -erroraction 'silentlycontinue'
                 if (($location -ne 'seeding')){
                     Get-Desktop ((Get-DesktopCount)-1) -erroraction 'SilentlyContinue' | Move-Window (Find-WindowHandle "Hell Let Loose") -ErrorAction 'SilentlyContinue' | Out-Null
                     Start-Sleep -Milliseconds 100
@@ -560,10 +569,15 @@ do {
                 if($verbose -eq 1){
                     Write-Host "Scheduler stopped seed loop"
                 }
+                
+                # When seeding is stopped, shutdown the game
+                Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
+                $currentlySeeding = ""
+                Start-Sleep -Seconds 5
                 break
             }
             elseif($steamUserSummary.Contains('gameserverip') -or $steamUserSummary.Contains('"personastate":0')){
-                if($gameInfo -ne $null){
+                if($null -ne $gameInfo){
                     $SeedCurrent=(GET-DATE)
                     $since = NEW-TIMESPAN –Start $seedStartTime –End $SeedCurrent
                     $sinceStamp = "[$([math]::Round($since.TotalMinutes))m]"
@@ -589,6 +603,7 @@ do {
                     else {
                         Write-Host -ForegroundColor Red (timestamp)("Unable to join game. Rebooting game.")
                         Stop-Process -Name 'HLL-Win64-Shipping'
+                        $currentlySeeding = ""
                         break
                     }
                 }
