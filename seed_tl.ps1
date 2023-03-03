@@ -569,6 +569,11 @@ do {
                 if($verbose -eq 1){
                     Write-Host "Scheduler stopped seed loop"
                 }
+                
+                # When seeding is stopped, shutdown the game
+                Stop-Process -Name 'HLL-Win64-Shipping' -Force -erroraction 'silentlycontinue'
+                $currentlySeeding = ""
+                Start-Sleep -Seconds 5
                 break
             }
             elseif($steamUserSummary.Contains('gameserverip') -or $steamUserSummary.Contains('"personastate":0')){
