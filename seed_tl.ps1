@@ -1,4 +1,4 @@
-﻿$localVersion = 3.1
+﻿$localVersion = 3.2
 $configReq = 3
 
 $latestdl = 'https://od.lk/fl/NjJfMzM2NDI2M18'
@@ -234,11 +234,6 @@ $serverList=[ordered]@{}
 $steamDir = Get-ItemProperty -Path Registry::HKEY_CURRENT_USER\SOFTWARE\Valve\Steam -Name SteamExe
 $currentlySeeding = ""
 
-$serversFromWeb = (Invoke-WebRequest -Method Get -Uri "http://131.153.65.166/files/seedscript/servers.txt" -UseBasicParsing).Content.Split(",")
-if($verbose -eq 1){
-    Write-Host "Servers To Seed: " $serversFromWeb
-}
-
 #Check for Updates
 if($updater -eq 1){
     Write-Host ""
@@ -273,12 +268,6 @@ if($updater -eq 1){
         }
         break
     }
-}
-
-if(-not (timeframe)){
-    Write-Host "The scheduler has prevented seeding. Check your settings.txt file." -BackgroundColor Red
-    Start-Sleep -Seconds 10
-    break
 }
 
 # Dependancy Checks
@@ -387,6 +376,27 @@ if($verbose -eq 1){
     Write-Host "Running Main Loop..."
 }
 do {
+    if ((timeframe) -eq 0) {
+        if ($setting.superSeeder -eq 1) {
+            Write-Host (timestamp)"The scheduler is configured to Seed between"$seedStart" and "$seedEnd". Waiting for Seed Start time" -ForegroundColor Black -BackgroundColor White
+            Start-Sleep -Seconds 600
+            continue
+        }
+        else {
+            Write-Host "The scheduler has prevented seeding. Script will end. " -BackgroundColor Red
+            Write-Host "(ProTip: Enable superseeder for script to run and wait for the schduled start time)" -BackgroundColor Black -BackgroundColor White
+            Start-Sleep -Seconds 10
+            break
+        }
+        
+    }
+
+    $serversFromWeb = @{}
+    $serversFromWeb = (Invoke-WebRequest -Method Get -Uri "http://131.153.65.166/files/seedscript/servers.txt" -UseBasicParsing).Content.Split(",")
+    if($verbose -eq 1){
+        Write-Host "Servers To Seed: " $serversFromWeb
+    }
+
     Write-Host ""
     Write-Host (timestamp)("Checking for servers best suited for seeding.") -ForegroundColor Black -BackgroundColor White
     Write-Host ""
@@ -528,7 +538,7 @@ do {
                         Write-Host (timestamp) "SPLASH FOUND"
                     }
                 }
-            }while(-not (($timeout -gt 100) -or ((Find-WindowHandle "EAC Launcher") -gt 0) -or (Get-Process -Name 'HLL-Win64-Shipping' -ErrorAction SilentlyContinue)))
+            } while(-not (($timeout -gt 100) -or ((Find-WindowHandle "EAC Launcher") -gt 0) -or (Get-Process -Name 'HLL-Win64-Shipping' -ErrorAction SilentlyContinue)))
 
             $timeout = 0
             do{
@@ -635,7 +645,7 @@ do {
     if($setting.superSeeder -eq 1){
         Start-Sleep -Seconds $loopSleep
     }
-} while (($setting.superSeeder -eq 1 -or $continue -eq 1) -and (timeframe -eq 1))
+} while (($setting.superSeeder -eq 1 -or $continue -eq 1))
 
 #EXIT TASKS
 if($waitForInput -eq 1){
