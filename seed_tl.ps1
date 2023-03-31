@@ -1,4 +1,4 @@
-﻿$localVersion = 3.2
+﻿$localVersion = 3.3
 $configReq = 3
 
 $latestdl = 'https://github.com/Rsslone/TL-SeedScript/Releases/Latest'
@@ -443,7 +443,7 @@ do {
             Start-Sleep -Seconds 10
         }
         
-    } while($retry -le 2 -and $error -eq 1)
+    } while($retry -le 2 -and $errorGettingData -eq 1)
     
     $retry = 0
 
