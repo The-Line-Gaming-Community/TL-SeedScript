@@ -1,7 +1,7 @@
 ﻿$localVersion = 3.3
 $configReq = 3
 
-$latestdl = 'https://github.com/Rsslone/TL-SeedScript/Releases/Latest'
+$latestdl = 'https://github.com/Rsslone/TL-SeedScript/releases/latest'
 $elevate = "false"
 
 #######################################################################################################################################
