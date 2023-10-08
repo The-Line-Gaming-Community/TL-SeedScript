@@ -424,11 +424,11 @@ do {
             }
             #Desired servers
             elseif(($null -ne $gameInfo) -and ($gameInfo.Players -le $popGoal)){
-                Write-Host -ForegroundColor Yellow (timestamp)($gameInfo.ServerName.ToString() + " needs seeding and has $($gameInfo.Players.ToString()) Soliders.")
+                Write-Host -ForegroundColor Yellow (timestamp)($gameInfo.ServerName.ToString() + " needs seeding and has $($gameInfo.Players.ToString()) Soldiers.")
                 $serverList.Add($server, ($gameInfo.Players))
             }
             elseif($gameInfo.Players -gt $popGoal){
-                Write-Host -ForegroundColor Green (timestamp)($gameInfo.ServerName.ToString() + " is already seeded with $($gameInfo.Players.ToString()) Soliders.")
+                Write-Host -ForegroundColor Green (timestamp)($gameInfo.ServerName.ToString() + " is already seeded with $($gameInfo.Players.ToString()) Soldiers.")
             }
             else{
                 Write-Host -ForegroundColor Red (timestamp) "$IP did not respond... Map Change? Crashed server? API failure?"
